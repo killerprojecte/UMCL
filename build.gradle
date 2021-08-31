@@ -1,0 +1,51 @@
+buildscript {
+    repositories {
+        mavenCentral()
+        maven { url 'https://plugins.gradle.org/m2/' }
+    }
+}
+
+plugins {
+    id 'checkstyle'
+}
+
+group 'org.jackhuang'
+version '3.0'
+
+subprojects {
+    apply plugin: 'java'
+    apply plugin: 'idea'
+    apply plugin: 'maven-publish'
+    apply plugin: 'checkstyle'
+
+    repositories {
+        mavenCentral()
+
+        maven { url 'https://jitpack.io' }
+    }
+
+    checkstyle {
+        sourceSets = []
+    }
+
+    sourceCompatibility = 1.8
+    compileJava.options.encoding = "UTF-8"
+    compileTestJava.options.encoding = "UTF-8"
+
+    dependencies {
+        testImplementation group: 'junit', name: 'junit', version: '4.12'
+    }
+
+    publishing {
+        publications {
+            maven(MavenPublication) {
+                from components.java
+            }
+        }
+        repositories {
+            mavenLocal()
+        }
+    }
+}
+
+defaultTasks 'clean', 'build'
