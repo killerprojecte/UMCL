@@ -271,7 +271,7 @@ public class MicrosoftService {
                 .createConnection();
         int responseCode = conn.getResponseCode();
         if (responseCode == HTTP_NOT_FOUND) {
-            throw new NoMinecraftJavaEditionProfileException();
+            throw new NoCharacterException();
         } else if (responseCode != 200) {
             throw new ResponseCodeException(new URL("https://api.minecraftservices.com/minecraft/profile"), responseCode);
         }
@@ -318,9 +318,6 @@ public class MicrosoftService {
 
         public static final long MISSING_XBOX_ACCOUNT = 2148916233L;
         public static final long ADD_FAMILY = 2148916238L;
-    }
-
-    public static class NoMinecraftJavaEditionProfileException extends AuthenticationException {
     }
 
     /**

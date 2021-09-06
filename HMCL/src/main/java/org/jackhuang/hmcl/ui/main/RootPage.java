@@ -176,14 +176,6 @@ public class RootPage extends DecoratorTabPage {
             downloadItem.setOnAction(e -> Controllers.navigate(Controllers.getDownloadPage()));
 
             // fifth item in left sidebar
-            AdvancedListItem multiplayerItem = new AdvancedListItem();
-            multiplayerItem
-                    .setLeftGraphic(AdvancedListItem.createImageView(newImage("/assets/img/command.png")).getKey());
-            multiplayerItem.setActionButtonVisible(false);
-            multiplayerItem.setTitle(i18n("multiplayer"));
-            multiplayerItem.setOnAction(e -> Controllers.navigate(Controllers.getMultiplayerPage()));
-
-            // sixth item in left sidebar
             AdvancedListItem launcherSettingsItem = new AdvancedListItem();
             launcherSettingsItem
                     .setLeftGraphic(AdvancedListItem.createImageView(newImage("/assets/img/command.png")).getKey());
@@ -199,8 +191,6 @@ public class RootPage extends DecoratorTabPage {
                     .add(gameListItem)
                     .add(gameItem)
                     .add(downloadItem)
-                    .startCategory(i18n("settings.launcher.general").toLowerCase())
-//                    .add(multiplayerItem)
                     .add(launcherSettingsItem);
 
             // the root page, with the sidebar in left, navigator in center.

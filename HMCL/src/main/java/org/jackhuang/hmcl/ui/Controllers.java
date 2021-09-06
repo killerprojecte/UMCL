@@ -48,7 +48,6 @@ import org.jackhuang.hmcl.ui.download.DownloadPage;
 import org.jackhuang.hmcl.ui.download.ModpackInstallWizardProvider;
 import org.jackhuang.hmcl.ui.main.LauncherSettingsPage;
 import org.jackhuang.hmcl.ui.main.RootPage;
-import org.jackhuang.hmcl.ui.multiplayer.MultiplayerPage;
 import org.jackhuang.hmcl.ui.versions.GameListPage;
 import org.jackhuang.hmcl.ui.versions.ModDownloadListPage;
 import org.jackhuang.hmcl.ui.versions.VersionPage;
@@ -102,7 +101,6 @@ public final class Controllers {
         accountListPage.accountsProperty().bindContent(Accounts.accountsProperty());
         return accountListPage;
     });
-    private static Lazy<MultiplayerPage> multiplayerPage = new Lazy<>(MultiplayerPage::new);
     private static Lazy<LauncherSettingsPage> settingsPage = new Lazy<>(LauncherSettingsPage::new);
 
     private Controllers() {
@@ -141,11 +139,6 @@ public final class Controllers {
     // FXThread
     public static ModDownloadListPage getModpackDownloadListPage() {
         return modDownloadListPage.get();
-    }
-
-    // FXThread
-    public static MultiplayerPage getMultiplayerPage() {
-        return multiplayerPage.get();
     }
 
     // FXThread

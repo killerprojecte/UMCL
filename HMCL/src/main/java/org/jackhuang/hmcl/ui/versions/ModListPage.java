@@ -54,8 +54,6 @@ public final class ModListPage extends ListPageBase<ModListPageSkin.ModInfoObjec
 
     private ModManager modManager;
     private LibraryAnalyzer libraryAnalyzer;
-    private Profile profile;
-    private String versionId;
 
     public ModListPage() {
         FXUtils.applyDragListener(this, it -> Arrays.asList("jar", "zip", "litemod").contains(FileUtils.getExtension(it)), mods -> {
@@ -81,9 +79,6 @@ public final class ModListPage extends ListPageBase<ModListPageSkin.ModInfoObjec
 
     @Override
     public void loadVersion(Profile profile, String id) {
-        this.profile = profile;
-        this.versionId = versionId;
-
         libraryAnalyzer = LibraryAnalyzer.analyze(profile.getRepository().getResolvedPreservingPatchesVersion(id));
         modded.set(libraryAnalyzer.hasModLoader());
         loadMods(profile.getRepository().getModManager(id));
@@ -170,10 +165,6 @@ public final class ModListPage extends ListPageBase<ModListPageSkin.ModInfoObjec
                 .filter(Objects::nonNull)
                 .map(ModListPageSkin.ModInfoObject::getModInfo)
                 .forEach(info -> info.setActive(false));
-    }
-
-    public void openModFolder() {
-        FXUtils.openFolder(new File(profile.getRepository().getRunDirectory(versionId), "mods"));
     }
 
     public boolean isModded() {
