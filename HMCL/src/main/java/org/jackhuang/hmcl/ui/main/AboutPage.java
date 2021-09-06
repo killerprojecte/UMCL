@@ -36,9 +36,9 @@ public class AboutPage extends StackPane {
         {
             IconedTwoLineListItem launcher = new IconedTwoLineListItem();
             launcher.setImage(new Image("/assets/img/craft_table.png", 32, 32, false, true));
-            launcher.setTitle("Hello Minecraft! Launcher");
+            launcher.setTitle("Unlimited MC");
             launcher.setSubtitle(Metadata.VERSION);
-            launcher.setExternalLink("https://hmcl.huangyuhui.net");
+            launcher.setExternalLink("https://mabio.top");
 
             IconedTwoLineListItem author = new IconedTwoLineListItem();
             author.setImage(new Image("/assets/img/yellow_fish.jpg", 32, 32, false, true));

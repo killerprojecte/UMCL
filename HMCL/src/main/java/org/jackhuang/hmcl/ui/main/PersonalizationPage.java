@@ -196,7 +196,7 @@ public class PersonalizationPage extends StackPane {
                     }
                 }
 
-                Label lblFontDisplay = new Label("Hello Minecraft! Launcher");
+                Label lblFontDisplay = new Label("Unlimited Minecraft! Launcher");
                 lblFontDisplay.fontProperty().bind(Bindings.createObjectBinding(
                         () -> Font.font(config().getFontFamily(), config().getFontSize()),
                         config().fontFamilyProperty(), config().fontSizeProperty()));
