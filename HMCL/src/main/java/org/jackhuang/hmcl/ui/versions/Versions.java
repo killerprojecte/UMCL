@@ -215,7 +215,7 @@ public final class Versions {
 
     private static boolean checkForLaunching(Profile profile, String id) {
         if (Accounts.getSelectedAccount() == null)
-            Controllers.getRootPage().checkAccount();
+            Controllers.getRootPage().checkAccountForcibly();
         else if (id == null || !profile.getRepository().isLoaded() || !profile.getRepository().hasVersion(id))
             Controllers.dialog(i18n("version.empty.launch"), i18n("launch.failed"), MessageDialogPane.MessageType.ERROR, () -> {
                 Controllers.navigate(Controllers.getGameListPage());
@@ -226,9 +226,11 @@ public final class Versions {
     }
 
     public static void modifyGlobalSettings(Profile profile) {
-        VersionSettingsPage page = new VersionSettingsPage();
-        page.loadVersion(profile, null);
-        Controllers.navigate(page);
+        Controllers.getSettingsPage().showGameSettings(profile);
+        Controllers.navigate(Controllers.getSettingsPage());
+//        VersionSettingsPage page = new VersionSettingsPage();
+//        page.loadVersion(profile, null);
+//        Controllers.navigate(page);
     }
 
     public static void modifyGameSettings(Profile profile, String version) {

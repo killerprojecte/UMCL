@@ -23,7 +23,7 @@
 }
 
 .scroll-bar .thumb {
-    -fx-fill: rgba(255, 255, 255, 0.5);
+    -fx-fill: -theme-thumb;
     -fx-arc-width: 0;
     -fx-arc-height: 0;
 }
@@ -40,6 +40,30 @@
 
 .subtitle-label {
     -fx-text-fill: rgba(0, 0, 0, 0.5);
+}
+
+.hint {
+    -fx-border-color: #b8daff;
+    -fx-background-color: #cce5ff;
+    -fx-background-radius: 5;
+    -fx-border-width: 1;
+    -fx-border-radius: 5;
+    -fx-padding: 6;
+}
+
+.memory-label {
+}
+
+.memory-used {
+    -fx-background-color: -fx-base-darker-color;
+}
+
+.memory-allocate {
+    -fx-background-color: -fx-base-check-color;
+}
+
+.memory-total {
+    -fx-background-color: -fx-base-rippler-color;
 }
 
 .update-label {
@@ -190,6 +214,10 @@
 	-fx-text-fill: rgba(0, 0, 0, 0.5);
     -fx-font-weight: normal;
     -fx-font-size: 12px;
+}
+
+.two-line-list-item > HBox > HBox {
+    -fx-spacing: 8;
 }
 
 .two-line-list-item > HBox > HBox > .tag {
@@ -398,7 +426,7 @@
     -fx-font-weight: BOLD;
 }
 
-.jfx-tool-bar .background {
+.jfx-tool-bar.background {
     -fx-background-color: -fx-base-color;
 }
 
@@ -530,23 +558,12 @@
 *                          							   *
 *******************************************************/
 
-.jfx-slider-style {
+.jfx-slider {
     -jfx-indicator-position: right;
 }
 
-.jfx-slider-style > .thumb {
-    -fx-background-color: #03a9f4;
-}
-
-.jfx-slider-style .track {
-    -fx-background-color: #ff5252;
-    -fx-pref-height: 5px;
-    -fx-pref-width: 5px;
-}
-
-.jfx-slider-style .sliderValue {
-    -fx-stroke: WHITE;
-    -fx-font-size: 10.0;
+.jfx-slider .thumb {
+    -fx-background-color: -fx-base-color;
 }
 
 /*******************************************************************************
@@ -648,13 +665,14 @@
 *******************************************************************************/
 
 .jfx-text-field, .jfx-password-field, .jfx-text-area {
-    -fx-background-color: transparent;
+    -fx-background-color: #f1f3f4;
     -fx-font-weight: BOLD;
     -fx-prompt-text-fill: #808080;
     -fx-alignment: top-left;
     -fx-pref-width: 300.0;
     -jfx-focus-color: -fx-base-check-color;
-    -jfx-unfocus-color: #4d4d4d;
+    -fx-padding: 8;
+    -jfx-unfocus-color: transparent;
 }
 
 .jfx-text-area .viewport {
@@ -666,6 +684,10 @@
 * JFX List View                                                                *
 *                                                                              *
 *******************************************************************************/
+
+.no-padding .list-cell {
+    -fx-padding: 0;
+}
 
 .jfx-list-cell, .list-cell {
     /*-fx-background-color: WHITE;*/
@@ -749,6 +771,14 @@
     -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.26), 10, 0.12, -1, 2);
 }
 
+.card-non-transparent {
+    -fx-background-color: white;
+    -fx-background-radius: 4;
+    -fx-padding: 8px;
+
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.26), 10, 0.12, -1, 2);
+}
+
 .card:selected {
     -fx-background-color: derive(-fx-base-color, 60%);
 }
@@ -756,6 +786,15 @@
 .card-list {
     -fx-padding: 10;
     -fx-spacing: 10;
+}
+
+.md-list-cell {
+    -fx-border-color: #e0e0e0;
+    -fx-border-width: 0 0 1 0;
+}
+
+.md-list-cell:selected {
+    -fx-background-color: derive(-fx-base-color, 60%);
 }
 
 .options-sublist {
@@ -768,6 +807,10 @@
     -fx-border-width: 1 0 0 0;
     -fx-padding: 10 16 10 16;
     -fx-font-size: 12;
+}
+
+.no-padding .options-list-item {
+    -fx-padding: 0;
 }
 
 .options-list-item:first {
@@ -1085,7 +1128,10 @@
 *******************************************************************************/
 
 .jfx-combo-box {
-   -jfx-focus-color: -fx-base-check-color;
+    -jfx-focus-color: transparent;
+    -jfx-unfocus-color: transparent;
+    -fx-background-color: #f1f3f4;
+    -fx-padding: 4;
 }
 
 .jfx-combo-box-warning {
@@ -1140,12 +1186,12 @@
 
 .window {
     -fx-background-color: transparent;
-    -fx-padding: 16;
+    -fx-padding: 8;
 }
 
 .body {
     -fx-border-radius: 5;
-    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.4), 20, 0.3, 0.0, 0.0);
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.4), 10, 0.3, 0.0, 0.0);
 }
 
 .debug-border {
@@ -1176,7 +1222,7 @@
     -fx-background-insets: 0.0;
 }
 
-.scroll-bar:vertical > .thumb, .scroll-bar:horizontal > .thumb {
+.scroll-bar:vertical .thumb, .scroll-bar:horizontal .thumb {
     -fx-background-color: #BCBCBC;
     -fx-background-insets: 0.0;
     -fx-background-radius: 1.0;
@@ -1212,6 +1258,7 @@
     -fx-background-color: null;
     -fx-background-insets: 0;
     -fx-padding: 0;
+    -fx-snap-to-pixel: false;
 }
 
 .scroll-pane:focused {

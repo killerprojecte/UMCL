@@ -30,10 +30,12 @@ import org.jackhuang.hmcl.Launcher;
 import org.jackhuang.hmcl.Metadata;
 import org.jackhuang.hmcl.download.java.JavaRepository;
 import org.jackhuang.hmcl.mod.curse.CurseModManager;
+import org.jackhuang.hmcl.setting.Accounts;
 import org.jackhuang.hmcl.setting.EnumCommonDirectory;
 import org.jackhuang.hmcl.setting.Profiles;
 import org.jackhuang.hmcl.task.Task;
 import org.jackhuang.hmcl.task.TaskExecutor;
+import org.jackhuang.hmcl.ui.account.AccountListPage;
 import org.jackhuang.hmcl.ui.account.AuthlibInjectorServersPage;
 import org.jackhuang.hmcl.ui.animation.ContainerAnimations;
 import org.jackhuang.hmcl.ui.construct.InputDialogPane;
@@ -42,9 +44,11 @@ import org.jackhuang.hmcl.ui.construct.MessageDialogPane.MessageType;
 import org.jackhuang.hmcl.ui.construct.PromptDialogPane;
 import org.jackhuang.hmcl.ui.construct.TaskExecutorDialogPane;
 import org.jackhuang.hmcl.ui.decorator.DecoratorController;
+import org.jackhuang.hmcl.ui.download.DownloadPage;
 import org.jackhuang.hmcl.ui.download.ModpackInstallWizardProvider;
 import org.jackhuang.hmcl.ui.main.LauncherSettingsPage;
 import org.jackhuang.hmcl.ui.main.RootPage;
+import org.jackhuang.hmcl.ui.multiplayer.MultiplayerPage;
 import org.jackhuang.hmcl.ui.versions.GameListPage;
 import org.jackhuang.hmcl.ui.versions.ModDownloadListPage;
 import org.jackhuang.hmcl.ui.versions.VersionPage;
@@ -91,6 +95,14 @@ public final class Controllers {
             }
         };
     });
+    private static Lazy<DownloadPage> downloadPage = new Lazy<>(DownloadPage::new);
+    private static Lazy<AccountListPage> accountListPage = new Lazy<>(() -> {
+        AccountListPage accountListPage = new AccountListPage();
+        accountListPage.selectedAccountProperty().bindBidirectional(Accounts.selectedAccountProperty());
+        accountListPage.accountsProperty().bindContent(Accounts.accountsProperty());
+        return accountListPage;
+    });
+    private static Lazy<MultiplayerPage> multiplayerPage = new Lazy<>(MultiplayerPage::new);
     private static Lazy<LauncherSettingsPage> settingsPage = new Lazy<>(LauncherSettingsPage::new);
 
     private Controllers() {
@@ -132,8 +144,23 @@ public final class Controllers {
     }
 
     // FXThread
+    public static MultiplayerPage getMultiplayerPage() {
+        return multiplayerPage.get();
+    }
+
+    // FXThread
     public static LauncherSettingsPage getSettingsPage() {
         return settingsPage.get();
+    }
+
+    // FXThread
+    public static AccountListPage getAccountListPage() {
+        return accountListPage.get();
+    }
+
+    // FXThread
+    public static DownloadPage getDownloadPage() {
+        return downloadPage.get();
     }
 
     // FXThread
@@ -172,14 +199,14 @@ public final class Controllers {
 
         scene = new Scene(decorator.getDecorator());
         scene.setFill(Color.TRANSPARENT);
-        stage.setMinHeight(482 + 32);
-        stage.setMinWidth(802 + 32);
+        stage.setMinHeight(450 + 2 + 40 + 16); // bg height + border width*2 + toolbar height + shadow width*2
+        stage.setMinWidth(800 + 2 + 16); // bg width + border width*2 + shadow width*2
         decorator.getDecorator().prefWidthProperty().bind(scene.widthProperty());
         decorator.getDecorator().prefHeightProperty().bind(scene.heightProperty());
         scene.getStylesheets().setAll(config().getTheme().getStylesheets());
 
         stage.getIcons().add(newImage("/assets/img/icon.png"));
-        stage.setTitle(Metadata.TITLE);
+        stage.setTitle(Metadata.FULL_TITLE);
         stage.initStyle(StageStyle.TRANSPARENT);
         stage.setScene(scene);
     }

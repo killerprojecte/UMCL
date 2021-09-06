@@ -1,6 +1,6 @@
 /*
  * Hello Minecraft! Launcher
- * Copyright (C) 2020  huangyuhui <huanghongxun2008@126.com> and contributors
+ * Copyright (C) 2021  huangyuhui <huanghongxun2008@126.com> and contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -107,15 +107,15 @@ public class VersionPage extends Control implements DecoratorPage, ModDownloadPa
         setVersion(version, profile);
         preferredVersionName = version;
 
-        if (versionSettingsTab.getNode() != null)
+        if (versionSettingsTab.isInitialized())
             versionSettingsTab.getNode().loadVersion(profile, version);
-        if (modListTab.getNode() != null)
+        if (modListTab.isInitialized())
             modListTab.getNode().loadVersion(profile, version);
-        if (curseModListTab.getNode() != null)
+        if (curseModListTab.isInitialized())
             curseModListTab.getNode().loadVersion(profile, version);
-        if (installerListTab.getNode() != null)
+        if (installerListTab.isInitialized())
             installerListTab.getNode().loadVersion(profile, version);
-        if (worldListTab.getNode() != null)
+        if (worldListTab.isInitialized())
             worldListTab.getNode().loadVersion(profile, version);
         currentVersionUpgradable.set(profile.getRepository().isModpack(version));
     }
@@ -222,8 +222,6 @@ public class VersionPage extends Control implements DecoratorPage, ModDownloadPa
 
     public static class Skin extends SkinBase<VersionPage> {
 
-        private JFXPopup listViewItemPopup;
-
         /**
          * Constructor for all SkinBase instances.
          *
@@ -231,34 +229,6 @@ public class VersionPage extends Control implements DecoratorPage, ModDownloadPa
          */
         protected Skin(VersionPage control) {
             super(control);
-
-            PopupMenu menu = new PopupMenu();
-            listViewItemPopup = new JFXPopup(menu);
-            menu.getContent().setAll(
-                    new IconedMenuItem(FXUtils.limitingSize(SVG.launch(Theme.blackFillBinding(), 14, 14), 14, 14), i18n("version.launch.test"), FXUtils.withJFXPopupClosing(() -> {
-                        Versions.testGame(getSkinnable().getProfile(), getSkinnable().getVersion());
-                    }, listViewItemPopup)),
-                    new IconedMenuItem(FXUtils.limitingSize(SVG.script(Theme.blackFillBinding(), 14, 14), 14, 14), i18n("version.launch_script"), FXUtils.withJFXPopupClosing(() -> {
-                        Versions.generateLaunchScript(getSkinnable().getProfile(), getSkinnable().getVersion());
-                    }, listViewItemPopup)),
-                    new MenuSeparator(),
-                    new IconedMenuItem(FXUtils.limitingSize(SVG.pencil(Theme.blackFillBinding(), 14, 14), 14, 14), i18n("version.manage.rename"), FXUtils.withJFXPopupClosing(() -> {
-                        Versions.renameVersion(getSkinnable().getProfile(), getSkinnable().getVersion()).thenApply(name -> getSkinnable().preferredVersionName = name);
-                    }, listViewItemPopup)),
-                    new IconedMenuItem(FXUtils.limitingSize(SVG.copy(Theme.blackFillBinding(), 14, 14), 14, 14), i18n("version.manage.duplicate"), FXUtils.withJFXPopupClosing(() -> {
-                        Versions.duplicateVersion(getSkinnable().getProfile(), getSkinnable().getVersion());
-                    }, listViewItemPopup)),
-                    new IconedMenuItem(FXUtils.limitingSize(SVG.delete(Theme.blackFillBinding(), 14, 14), 14, 14), i18n("version.manage.remove"), FXUtils.withJFXPopupClosing(() -> {
-                        Versions.deleteVersion(getSkinnable().getProfile(), getSkinnable().getVersion());
-                    }, listViewItemPopup)),
-                    new IconedMenuItem(FXUtils.limitingSize(SVG.export(Theme.blackFillBinding(), 14, 14), 14, 14), i18n("modpack.export"), FXUtils.withJFXPopupClosing(() -> {
-                        Versions.exportVersion(getSkinnable().getProfile(), getSkinnable().getVersion());
-                    }, listViewItemPopup)),
-                    new MenuSeparator(),
-                    new IconedMenuItem(FXUtils.limitingSize(SVG.folderOpen(Theme.blackFillBinding(), 14, 14), 14, 14), i18n("folder.game"), FXUtils.withJFXPopupClosing(() -> {
-                        Versions.openFolder(getSkinnable().getProfile(), getSkinnable().getVersion());
-                    }, listViewItemPopup))
-            );
 
             SpinnerPane spinnerPane = new SpinnerPane();
             spinnerPane.getStyleClass().add("large-spinner-pane");
@@ -273,7 +243,7 @@ public class VersionPage extends Control implements DecoratorPage, ModDownloadPa
 
                 AdvancedListItem versionSettingsItem = new AdvancedListItem();
                 versionSettingsItem.getStyleClass().add("navigation-drawer-item");
-                versionSettingsItem.setTitle(i18n("settings"));
+                versionSettingsItem.setTitle(i18n("settings.game"));
                 versionSettingsItem.setLeftGraphic(wrap(SVG.gearOutline(null, 20, 20)));
                 versionSettingsItem.setActionButtonVisible(false);
                 versionSettingsItem.activeProperty().bind(control.tab.getSelectionModel().selectedItemProperty().isEqualTo(control.versionSettingsTab));
@@ -281,7 +251,7 @@ public class VersionPage extends Control implements DecoratorPage, ModDownloadPa
 
                 AdvancedListItem modListItem = new AdvancedListItem();
                 modListItem.getStyleClass().add("navigation-drawer-item");
-                modListItem.setTitle(i18n("mods"));
+                modListItem.setTitle(i18n("mods.manage"));
                 modListItem.setLeftGraphic(wrap(SVG.puzzle(null, 20, 20)));
                 modListItem.setActionButtonVisible(false);
                 modListItem.activeProperty().bind(control.tab.getSelectionModel().selectedItemProperty().isEqualTo(control.modListTab));
@@ -305,8 +275,8 @@ public class VersionPage extends Control implements DecoratorPage, ModDownloadPa
 
                 AdvancedListItem worldListItem = new AdvancedListItem();
                 worldListItem.getStyleClass().add("navigation-drawer-item");
-                worldListItem.setTitle(i18n("world"));
-                worldListItem.setLeftGraphic(wrap(SVG.gamepad(null, 20, 20)));
+                worldListItem.setTitle(i18n("world.manage"));
+                worldListItem.setLeftGraphic(wrap(SVG.earth(null, 20, 20)));
                 worldListItem.setActionButtonVisible(false);
                 worldListItem.activeProperty().bind(control.tab.getSelectionModel().selectedItemProperty().isEqualTo(control.worldListTab));
                 worldListItem.setOnAction(e -> control.tab.getSelectionModel().select(control.worldListTab));
@@ -328,13 +298,13 @@ public class VersionPage extends Control implements DecoratorPage, ModDownloadPa
                         new IconedMenuItem(FXUtils.limitingSize(SVG.gearOutline(Theme.blackFillBinding(), 14, 14), 14, 14), i18n("folder.config"), FXUtils.withJFXPopupClosing(() -> control.onBrowse("config"), browsePopup)),
                         new IconedMenuItem(FXUtils.limitingSize(SVG.texture(Theme.blackFillBinding(), 14, 14), 14, 14), i18n("folder.resourcepacks"), FXUtils.withJFXPopupClosing(() -> control.onBrowse("resourcepacks"), browsePopup)),
                         new IconedMenuItem(FXUtils.limitingSize(SVG.monitorScreenshot(Theme.blackFillBinding(), 14, 14), 14, 14), i18n("folder.screenshots"), FXUtils.withJFXPopupClosing(() -> control.onBrowse("screenshots"), browsePopup)),
-                        new IconedMenuItem(FXUtils.limitingSize(SVG.gamepad(Theme.blackFillBinding(), 14, 14), 14, 14), i18n("folder.saves"), FXUtils.withJFXPopupClosing(() -> control.onBrowse("saves"), browsePopup))
+                        new IconedMenuItem(FXUtils.limitingSize(SVG.earth(Theme.blackFillBinding(), 14, 14), 14, 14), i18n("folder.saves"), FXUtils.withJFXPopupClosing(() -> control.onBrowse("saves"), browsePopup))
                 );
 
                 PopupMenu managementList = new PopupMenu();
                 JFXPopup managementPopup = new JFXPopup(managementList);
                 managementList.getContent().setAll(
-                        new IconedMenuItem(FXUtils.limitingSize(SVG.launchOutline(Theme.blackFillBinding(), 14, 14), 14, 14), i18n("version.launch.test"), FXUtils.withJFXPopupClosing(control::testGame, managementPopup)),
+                        new IconedMenuItem(FXUtils.limitingSize(SVG.rocketLaunchOutline(Theme.blackFillBinding(), 14, 14), 14, 14), i18n("version.launch.test"), FXUtils.withJFXPopupClosing(control::testGame, managementPopup)),
                         new IconedMenuItem(FXUtils.limitingSize(SVG.script(Theme.blackFillBinding(), 14, 14), 14, 14), i18n("version.launch_script"), FXUtils.withJFXPopupClosing(control::generateLaunchScript, managementPopup)),
                         new MenuSeparator(),
                         new IconedMenuItem(FXUtils.limitingSize(SVG.pencil(Theme.blackFillBinding(), 14, 14), 14, 14), i18n("version.manage.rename"), FXUtils.withJFXPopupClosing(control::rename, managementPopup)),
@@ -358,7 +328,7 @@ public class VersionPage extends Control implements DecoratorPage, ModDownloadPa
                 AdvancedListItem testGameItem = new AdvancedListItem();
                 testGameItem.getStyleClass().add("navigation-drawer-item");
                 testGameItem.setTitle(i18n("version.launch.test"));
-                testGameItem.setLeftGraphic(wrap(SVG.launchOutline(Theme.blackFillBinding(), 20, 20)));
+                testGameItem.setLeftGraphic(wrap(SVG.rocketLaunchOutline(Theme.blackFillBinding(), 20, 20)));
                 testGameItem.setActionButtonVisible(false);
                 testGameItem.setOnAction(e -> control.testGame());
 
@@ -388,7 +358,7 @@ public class VersionPage extends Control implements DecoratorPage, ModDownloadPa
             }
 
             control.state.bind(Bindings.createObjectBinding(() ->
-                            new State(i18n("version.manage.manage.title", getSkinnable().getVersion()), null, true, false, true, false, 200),
+                            State.fromTitle(i18n("version.manage.manage.title", getSkinnable().getVersion()), -1),
                     getSkinnable().version));
 
             //control.transitionPane.getStyleClass().add("gray-background");
@@ -410,7 +380,7 @@ public class VersionPage extends Control implements DecoratorPage, ModDownloadPa
         return stackPane;
     }
 
-    interface VersionLoadable {
+    public interface VersionLoadable {
         void loadVersion(Profile profile, String version);
     }
 }

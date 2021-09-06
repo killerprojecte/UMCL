@@ -1,6 +1,6 @@
 /*
  * Hello Minecraft! Launcher
- * Copyright (C) 2020  huangyuhui <huanghongxun2008@126.com> and contributors
+ * Copyright (C) 2021  huangyuhui <huanghongxun2008@126.com> and contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,6 +30,8 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
@@ -59,7 +61,7 @@ import static org.jackhuang.hmcl.ui.FXUtils.SINE;
 import static org.jackhuang.hmcl.util.i18n.I18n.i18n;
 
 public final class MainPage extends StackPane implements DecoratorPage {
-    private final ReadOnlyObjectWrapper<State> state = new ReadOnlyObjectWrapper<>(State.fromTitle("HMCL " + Metadata.VERSION));
+    private final ReadOnlyObjectWrapper<State> state = new ReadOnlyObjectWrapper<>();
 
     private final PopupMenu menu = new PopupMenu();
     private final JFXPopup popup = new JFXPopup(menu);
@@ -75,6 +77,19 @@ public final class MainPage extends StackPane implements DecoratorPage {
     private JFXButton menuButton;
 
     {
+        HBox titleNode = new HBox(8);
+        titleNode.setPadding(new Insets(0, 0, 0, 2));
+        titleNode.setAlignment(Pos.CENTER_LEFT);
+
+        ImageView titleIcon = new ImageView();
+        titleIcon.setImage(new Image("/assets/img/icon.png", 20, 20, false, false));
+
+        Label titleLabel = new Label(Metadata.FULL_TITLE);
+        titleLabel.getStyleClass().add("jfx-decorator-title");
+        titleNode.getChildren().setAll(titleIcon, titleLabel);
+
+        state.setValue(State.fromTitleNode(titleNode));
+
         setPadding(new Insets(20));
 
         updatePane = new StackPane();

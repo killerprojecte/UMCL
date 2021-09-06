@@ -23,6 +23,7 @@ import javafx.beans.InvalidationListener;
 import javafx.beans.property.*;
 import org.jackhuang.hmcl.game.GameDirectoryType;
 import org.jackhuang.hmcl.game.NativesDirectoryType;
+import org.jackhuang.hmcl.game.ProcessPriority;
 import org.jackhuang.hmcl.util.Lang;
 import org.jackhuang.hmcl.util.StringUtils;
 import org.jackhuang.hmcl.util.platform.JavaVersion;
@@ -234,6 +235,20 @@ public final class VersionSetting implements Cloneable {
 
     public void setMinMemory(Integer minMemory) {
         minMemoryProperty.set(minMemory);
+    }
+
+    private final BooleanProperty autoMemory = new SimpleBooleanProperty(this, "autoMemory", true);
+
+    public boolean isAutoMemory() {
+        return autoMemory.get();
+    }
+
+    public BooleanProperty autoMemoryProperty() {
+        return autoMemory;
+    }
+
+    public void setAutoMemory(boolean autoMemory) {
+        this.autoMemory.set(autoMemory);
     }
 
     private final StringProperty preLaunchCommandProperty = new SimpleStringProperty(this, "precalledCommand", "");
@@ -475,6 +490,48 @@ public final class VersionSetting implements Cloneable {
         gameDirProperty.set(gameDir);
     }
 
+    private final ObjectProperty<ProcessPriority> processPriorityProperty = new SimpleObjectProperty<>(this, "processPriority", ProcessPriority.NORMAL);
+
+    public ObjectProperty<ProcessPriority> processPriorityProperty() {
+        return processPriorityProperty;
+    }
+
+    public ProcessPriority getProcessPriority() {
+        return processPriorityProperty.get();
+    }
+
+    public void setProcessPriority(ProcessPriority processPriority) {
+        processPriorityProperty.set(processPriority);
+    }
+
+    private final BooleanProperty useNativeGLFW = new SimpleBooleanProperty(this, "nativeGLFW", false);
+
+    public boolean isUseNativeGLFW() {
+        return useNativeGLFW.get();
+    }
+
+    public BooleanProperty useNativeGLFWProperty() {
+        return useNativeGLFW;
+    }
+
+    public void setUseNativeGLFW(boolean useNativeGLFW) {
+        this.useNativeGLFW.set(useNativeGLFW);
+    }
+
+    private final BooleanProperty useNativeOpenAL = new SimpleBooleanProperty(this, "nativeOpenAL", false);
+
+    public boolean isUseNativeOpenAL() {
+        return useNativeOpenAL.get();
+    }
+
+    public BooleanProperty useNativeOpenALProperty() {
+        return useNativeOpenAL;
+    }
+
+    public void setUseNativeOpenAL(boolean useNativeOpenAL) {
+        this.useNativeOpenAL.set(useNativeOpenAL);
+    }
+
     // launcher settings
 
     /**
@@ -543,6 +600,7 @@ public final class VersionSetting implements Cloneable {
         permSizeProperty.addListener(listener);
         maxMemoryProperty.addListener(listener);
         minMemoryProperty.addListener(listener);
+        autoMemory.addListener(listener);
         preLaunchCommandProperty.addListener(listener);
         javaArgsProperty.addListener(listener);
         minecraftArgsProperty.addListener(listener);
@@ -556,6 +614,9 @@ public final class VersionSetting implements Cloneable {
         heightProperty.addListener(listener);
         gameDirTypeProperty.addListener(listener);
         gameDirProperty.addListener(listener);
+        processPriorityProperty.addListener(listener);
+        useNativeGLFW.addListener(listener);
+        useNativeOpenAL.addListener(listener);
         launcherVisibilityProperty.addListener(listener);
         defaultJavaPathProperty.addListener(listener);
         nativesDirProperty.addListener(listener);
@@ -573,6 +634,7 @@ public final class VersionSetting implements Cloneable {
         versionSetting.setPermSize(getPermSize());
         versionSetting.setMaxMemory(getMaxMemory());
         versionSetting.setMinMemory(getMinMemory());
+        versionSetting.setAutoMemory(isAutoMemory());
         versionSetting.setPreLaunchCommand(getPreLaunchCommand());
         versionSetting.setJavaArgs(getJavaArgs());
         versionSetting.setMinecraftArgs(getMinecraftArgs());
@@ -586,6 +648,9 @@ public final class VersionSetting implements Cloneable {
         versionSetting.setHeight(getHeight());
         versionSetting.setGameDirType(getGameDirType());
         versionSetting.setGameDir(getGameDir());
+        versionSetting.setProcessPriority(getProcessPriority());
+        versionSetting.setUseNativeGLFW(isUseNativeGLFW());
+        versionSetting.setUseNativeOpenAL(isUseNativeOpenAL());
         versionSetting.setLauncherVisibility(getLauncherVisibility());
         versionSetting.setNativesDir(getNativesDir());
         return versionSetting;
@@ -602,6 +667,7 @@ public final class VersionSetting implements Cloneable {
             obj.addProperty("minecraftArgs", src.getMinecraftArgs());
             obj.addProperty("maxMemory", src.getMaxMemory() <= 0 ? OperatingSystem.SUGGESTED_MEMORY : src.getMaxMemory());
             obj.addProperty("minMemory", src.getMinMemory());
+            obj.addProperty("autoMemory", src.isAutoMemory());
             obj.addProperty("permSize", src.getPermSize());
             obj.addProperty("width", src.getWidth());
             obj.addProperty("height", src.getHeight());
@@ -617,6 +683,9 @@ public final class VersionSetting implements Cloneable {
             obj.addProperty("showLogs", src.isShowLogs());
             obj.addProperty("gameDir", src.getGameDir());
             obj.addProperty("launcherVisibility", src.getLauncherVisibility().ordinal());
+            obj.addProperty("processPriority", src.getProcessPriority().ordinal());
+            obj.addProperty("useNativeGLFW", src.isUseNativeGLFW());
+            obj.addProperty("useNativeOpenAL", src.isUseNativeOpenAL());
             obj.addProperty("gameDirType", src.getGameDirType().ordinal());
             obj.addProperty("defaultJavaPath", src.getDefaultJavaPath());
             obj.addProperty("nativesDir", src.getNativesDir());
@@ -641,6 +710,7 @@ public final class VersionSetting implements Cloneable {
             vs.setMinecraftArgs(Optional.ofNullable(obj.get("minecraftArgs")).map(JsonElement::getAsString).orElse(""));
             vs.setMaxMemory(maxMemoryN);
             vs.setMinMemory(Optional.ofNullable(obj.get("minMemory")).map(JsonElement::getAsInt).orElse(null));
+            vs.setAutoMemory(Optional.ofNullable(obj.get("autoMemory")).map(JsonElement::getAsBoolean).orElse(true));
             vs.setPermSize(Optional.ofNullable(obj.get("permSize")).map(JsonElement::getAsString).orElse(""));
             vs.setWidth(Optional.ofNullable(obj.get("width")).map(JsonElement::getAsJsonPrimitive).map(this::parseJsonPrimitive).orElse(0));
             vs.setHeight(Optional.ofNullable(obj.get("height")).map(JsonElement::getAsJsonPrimitive).map(this::parseJsonPrimitive).orElse(0));
@@ -656,8 +726,11 @@ public final class VersionSetting implements Cloneable {
             vs.setNotCheckGame(Optional.ofNullable(obj.get("notCheckGame")).map(JsonElement::getAsBoolean).orElse(false));
             vs.setNotCheckJVM(Optional.ofNullable(obj.get("notCheckJVM")).map(JsonElement::getAsBoolean).orElse(false));
             vs.setShowLogs(Optional.ofNullable(obj.get("showLogs")).map(JsonElement::getAsBoolean).orElse(false));
-            vs.setLauncherVisibility(LauncherVisibility.values()[Optional.ofNullable(obj.get("launcherVisibility")).map(JsonElement::getAsInt).orElse(1)]);
-            vs.setGameDirType(GameDirectoryType.values()[Optional.ofNullable(obj.get("gameDirType")).map(JsonElement::getAsInt).orElse(0)]);
+            vs.setLauncherVisibility(LauncherVisibility.values()[Optional.ofNullable(obj.get("launcherVisibility")).map(JsonElement::getAsInt).orElse(LauncherVisibility.HIDE.ordinal())]);
+            vs.setProcessPriority(ProcessPriority.values()[Optional.ofNullable(obj.get("processPriority")).map(JsonElement::getAsInt).orElse(ProcessPriority.NORMAL.ordinal())]);
+            vs.setUseNativeGLFW(Optional.ofNullable(obj.get("useNativeGLFW")).map(JsonElement::getAsBoolean).orElse(false));
+            vs.setUseNativeOpenAL(Optional.ofNullable(obj.get("useNativeOpenAL")).map(JsonElement::getAsBoolean).orElse(false));
+            vs.setGameDirType(GameDirectoryType.values()[Optional.ofNullable(obj.get("gameDirType")).map(JsonElement::getAsInt).orElse(GameDirectoryType.ROOT_FOLDER.ordinal())]);
             vs.setDefaultJavaPath(Optional.ofNullable(obj.get("defaultJavaPath")).map(JsonElement::getAsString).orElse(null));
             vs.setNativesDirType(NativesDirectoryType.values()[Optional.ofNullable(obj.get("nativesDirType")).map(JsonElement::getAsInt).orElse(0)]);
 

@@ -17,15 +17,16 @@
  */
 package org.jackhuang.hmcl.auth.microsoft;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonParseException;
 import com.google.gson.annotations.SerializedName;
 import org.jackhuang.hmcl.auth.*;
+import org.jackhuang.hmcl.auth.yggdrasil.CompleteGameProfile;
 import org.jackhuang.hmcl.auth.yggdrasil.RemoteAuthenticationException;
 import org.jackhuang.hmcl.auth.yggdrasil.Texture;
 import org.jackhuang.hmcl.auth.yggdrasil.TextureType;
-import org.jackhuang.hmcl.util.gson.JsonUtils;
-import org.jackhuang.hmcl.util.gson.TolerableValidationException;
-import org.jackhuang.hmcl.util.gson.Validation;
+import org.jackhuang.hmcl.util.gson.*;
 import org.jackhuang.hmcl.util.io.HttpRequest;
 import org.jackhuang.hmcl.util.io.NetworkUtils;
 import org.jackhuang.hmcl.util.io.ResponseCodeException;
@@ -60,17 +61,17 @@ public class MicrosoftService {
 
     private final OAuthCallback callback;
 
-    private final ObservableOptionalCache<String, MinecraftProfileResponse, AuthenticationException> profileRepository;
+    private final ObservableOptionalCache<UUID, CompleteGameProfile, AuthenticationException> profileRepository;
 
     public MicrosoftService(OAuthCallback callback) {
         this.callback = requireNonNull(callback);
-        this.profileRepository = new ObservableOptionalCache<>(authorization -> {
-            LOG.info("Fetching properties");
-            return getCompleteProfile(authorization);
+        this.profileRepository = new ObservableOptionalCache<>(uuid -> {
+            LOG.info("Fetching properties of " + uuid);
+            return getCompleteGameProfile(uuid);
         }, (uuid, e) -> LOG.log(Level.WARNING, "Failed to fetch properties of " + uuid, e), POOL);
     }
 
-    public ObservableOptionalCache<String, MinecraftProfileResponse, AuthenticationException> getProfileRepository() {
+    public ObservableOptionalCache<UUID, CompleteGameProfile, AuthenticationException> getProfileRepository() {
         return profileRepository;
     }
 
@@ -138,6 +139,11 @@ public class MicrosoftService {
                                         pair("RpsTicket", "d=" + liveAccessToken))),
                         pair("RelyingParty", "http://auth.xboxlive.com"), pair("TokenType", "JWT")))
                 .accept("application/json").getJson(XBoxLiveAuthenticationResponse.class);
+
+        if (xboxResponse.errorCode != 0) {
+            throw new XboxAuthorizationException(xboxResponse.errorCode);
+        }
+
         String uhs = (String) xboxResponse.displayClaims.xui.get(0).get("uhs");
 
         // Authenticate Minecraft with XSTS
@@ -149,6 +155,11 @@ public class MicrosoftService {
                                         pair("UserTokens", Collections.singletonList(xboxResponse.token)))),
                         pair("RelyingParty", "rp://api.minecraftservices.com/"), pair("TokenType", "JWT")))
                 .getJson(XBoxLiveAuthenticationResponse.class);
+
+        if (xboxResponse.errorCode != 0) {
+            throw new XboxAuthorizationException(xboxResponse.errorCode);
+        }
+
         String minecraftXstsUhs = (String) minecraftXstsResponse.displayClaims.xui.get(0).get("uhs");
         if (!Objects.equals(uhs, minecraftXstsUhs)) {
             throw new ServerResponseMalformedException("uhs mismatched");
@@ -163,6 +174,11 @@ public class MicrosoftService {
                                         pair("UserTokens", Collections.singletonList(xboxResponse.token)))),
                         pair("RelyingParty", "http://xboxlive.com"), pair("TokenType", "JWT")))
                 .getJson(XBoxLiveAuthenticationResponse.class);
+
+        if (xboxXstsResponse.errorCode != 0) {
+            throw new XboxAuthorizationException(xboxXstsResponse.errorCode);
+        }
+
         String xboxXstsUhs = (String) xboxXstsResponse.displayClaims.xui.get(0).get("uhs");
         if (!Objects.equals(uhs, xboxXstsUhs)) {
             throw new ServerResponseMalformedException("uhs mismatched");
@@ -189,7 +205,7 @@ public class MicrosoftService {
     public Optional<MinecraftProfileResponse> getCompleteProfile(String authorization) throws AuthenticationException {
         try {
             return Optional.ofNullable(
-                    HttpRequest.GET(NetworkUtils.toURL("https://api.minecraftservices.com/minecraft/profile"))
+                    HttpRequest.GET("https://api.minecraftservices.com/minecraft/profile")
                             .authorization(authorization).getJson(MinecraftProfileResponse.class));
         } catch (IOException e) {
             throw new ServerDisconnectException(e);
@@ -198,9 +214,13 @@ public class MicrosoftService {
         }
     }
 
-    public boolean validate(String tokenType, String accessToken) throws AuthenticationException {
+    public boolean validate(long notAfter, String tokenType, String accessToken) throws AuthenticationException {
         requireNonNull(tokenType);
         requireNonNull(accessToken);
+
+        if (System.currentTimeMillis() > notAfter) {
+            return false;
+        }
 
         try {
             getMinecraftProfile(tokenType, accessToken);
@@ -239,7 +259,7 @@ public class MicrosoftService {
                         + "PublicGamerpic,ShowUserAsAvatar,Gamerscore,Gamertag,ModernGamertag,ModernGamertagSuffix,"
                         + "UniqueModernGamertag,AccountTier,TenureLevel,XboxOneRep,"
                         + "PreferredColor,Location,Bio,Watermarks," + "RealName,RealNameOverride,IsQuarantined"))
-                .contentType("application/json").accept("application/json")
+                .accept("application/json")
                 .authorization(String.format("XBL3.0 x=%s;%s", uhs, xstsToken)).header("x-xbl-contract-version", "3")
                 .getString();
     }
@@ -247,17 +267,60 @@ public class MicrosoftService {
     private static MinecraftProfileResponse getMinecraftProfile(String tokenType, String accessToken)
             throws IOException, AuthenticationException {
         HttpURLConnection conn = HttpRequest.GET("https://api.minecraftservices.com/minecraft/profile")
-                .contentType("application/json").authorization(String.format("%s %s", tokenType, accessToken))
+                .authorization(String.format("%s %s", tokenType, accessToken))
                 .createConnection();
         int responseCode = conn.getResponseCode();
         if (responseCode == HTTP_NOT_FOUND) {
-            throw new NoCharacterException();
+            throw new NoMinecraftJavaEditionProfileException();
         } else if (responseCode != 200) {
             throw new ResponseCodeException(new URL("https://api.minecraftservices.com/minecraft/profile"), responseCode);
         }
 
         String result = NetworkUtils.readData(conn);
         return JsonUtils.fromNonNullJson(result, MinecraftProfileResponse.class);
+    }
+
+    public Optional<CompleteGameProfile> getCompleteGameProfile(UUID uuid) throws AuthenticationException {
+        Objects.requireNonNull(uuid);
+
+        return Optional.ofNullable(GSON.fromJson(request(NetworkUtils.toURL("https://sessionserver.mojang.com/session/minecraft/profile/" + UUIDTypeAdapter.fromUUID(uuid)), null), CompleteGameProfile.class));
+    }
+
+    private static String request(URL url, Object payload) throws AuthenticationException {
+        try {
+            if (payload == null)
+                return NetworkUtils.doGet(url);
+            else
+                return NetworkUtils.doPost(url, payload instanceof String ? (String) payload : GSON.toJson(payload), "application/json");
+        } catch (IOException e) {
+            throw new ServerDisconnectException(e);
+        }
+    }
+
+    private static <T> T fromJson(String text, Class<T> typeOfT) throws ServerResponseMalformedException {
+        try {
+            return GSON.fromJson(text, typeOfT);
+        } catch (JsonParseException e) {
+            throw new ServerResponseMalformedException(text, e);
+        }
+    }
+
+    public static class XboxAuthorizationException extends AuthenticationException {
+        private final long errorCode;
+
+        public XboxAuthorizationException(long errorCode) {
+            this.errorCode = errorCode;
+        }
+
+        public long getErrorCode() {
+            return errorCode;
+        }
+
+        public static final long MISSING_XBOX_ACCOUNT = 2148916233L;
+        public static final long ADD_FAMILY = 2148916238L;
+    }
+
+    public static class NoMinecraftJavaEditionProfileException extends AuthenticationException {
     }
 
     /**
@@ -304,6 +367,17 @@ public class MicrosoftService {
         List<Map<Object, Object>> xui;
     }
 
+    private static class MicrosoftErrorResponse {
+        @SerializedName("XErr")
+        long errorCode;
+
+        @SerializedName("Message")
+        String message;
+
+        @SerializedName("Redirect")
+        String redirectUrl;
+    }
+
     /**
      *
      * Success Response: { "IssueInstant":"2020-12-07T19:52:08.4463796Z",
@@ -316,7 +390,7 @@ public class MicrosoftService {
      * XErr Candidates: 2148916233 = missing XBox account 2148916238 = child account
      * not linked to a family
      */
-    private static class XBoxLiveAuthenticationResponse {
+    private static class XBoxLiveAuthenticationResponse extends MicrosoftErrorResponse {
         @SerializedName("IssueInstant")
         String issueInstant;
 
@@ -445,5 +519,10 @@ public class MicrosoftService {
          */
         String waitFor() throws InterruptedException, ExecutionException;
     }
+
+    private static final Gson GSON = new GsonBuilder()
+            .registerTypeAdapter(UUID.class, UUIDTypeAdapter.INSTANCE)
+            .registerTypeAdapterFactory(ValidationTypeAdapterFactory.INSTANCE)
+            .create();
 
 }

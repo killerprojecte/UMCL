@@ -18,10 +18,7 @@
 package org.jackhuang.hmcl.ui;
 
 import com.jfoenix.controls.*;
-import javafx.animation.Interpolator;
-import javafx.animation.KeyFrame;
-import javafx.animation.KeyValue;
-import javafx.animation.Timeline;
+import javafx.animation.*;
 import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
@@ -38,6 +35,8 @@ import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.image.PixelWriter;
+import javafx.scene.image.WritableImage;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.TransferMode;
@@ -55,13 +54,12 @@ import org.jackhuang.hmcl.util.javafx.ExtendedProperties;
 import org.jackhuang.hmcl.util.javafx.SafeStringConverter;
 import org.jackhuang.hmcl.util.platform.OperatingSystem;
 
-import java.io.File;
-import java.io.FileFilter;
-import java.io.IOException;
-import java.io.UncheckedIOException;
+import java.awt.image.BufferedImage;
+import java.io.*;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.net.URI;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.BooleanSupplier;
@@ -321,16 +319,19 @@ public final class FXUtils {
         node.getProperties().put(animationKey, timeline);
     }
 
-    public static <T> void playAnimation(Node node, String animationKey, Duration duration, WritableValue<T> property, T from, T to, Interpolator interpolator) {
+    public static <T> Animation playAnimation(Node node, String animationKey, Duration duration, WritableValue<T> property, T from, T to, Interpolator interpolator) {
         if (from == null) from = property.getValue();
         if (duration == null || Objects.equals(duration, Duration.ZERO) || Objects.equals(from, to)) {
             playAnimation(node, animationKey, null);
             property.setValue(to);
+            return null;
         } else {
-            playAnimation(node, animationKey, new Timeline(
+            Timeline timeline = new Timeline(
                     new KeyFrame(Duration.ZERO, new KeyValue(property, from, interpolator)),
                     new KeyFrame(duration, new KeyValue(property, to, interpolator))
-            ));
+            );
+            playAnimation(node, animationKey, timeline);
+            return timeline;
         }
     }
 
@@ -363,16 +364,54 @@ public final class FXUtils {
         }
     }
 
+    public static void showFileInExplorer(Path file) {
+        switch (OperatingSystem.CURRENT_OS) {
+            case WINDOWS:
+                try {
+                    Runtime.getRuntime().exec(new String[]{"explorer.exe", "/select,", file.toAbsolutePath().toString()});
+                } catch (IOException e) {
+                    Logging.LOG.log(Level.SEVERE, "Unable to open " + file + " by executing explorer /select", e);
+                }
+                break;
+            default:
+                // Currently unsupported.
+                break;
+        }
+    }
+
+    private static final String[] linuxBrowsers = {
+            "xdg-open",
+            "google-chrome",
+            "firefox",
+            "microsoft-edge",
+            "opera",
+            "konqueror",
+            "mozilla"
+    };
+
     /**
-     * Open URL by java.awt.Desktop
+     * Open URL in browser
      *
      * @param link null is allowed but will be ignored
      */
     public static void openLink(String link) {
         if (link == null)
             return;
-        thread(() -> {
-            if (java.awt.Desktop.isDesktopSupported()) {
+
+        if (java.awt.Desktop.isDesktopSupported()) {
+            thread(() -> {
+                if (OperatingSystem.CURRENT_OS == OperatingSystem.LINUX) {
+                    for (String browser : linuxBrowsers) {
+                        try (final InputStream is = Runtime.getRuntime().exec(new String[]{"which", browser}).getInputStream()) {
+                            if (is.read() != -1) {
+                                Runtime.getRuntime().exec(new String[]{browser, link});
+                                return;
+                            }
+                        } catch (Throwable ignored) {
+                        }
+                        Logging.LOG.log(Level.WARNING, "No known browser found");
+                    }
+                }
                 try {
                     java.awt.Desktop.getDesktop().browse(new URI(link));
                 } catch (Throwable e) {
@@ -384,8 +423,9 @@ public final class FXUtils {
                         }
                     Logging.LOG.log(Level.WARNING, "Failed to open link: " + link, e);
                 }
-            }
-        });
+            });
+
+        }
     }
 
     public static void bindInt(JFXTextField textField, Property<Number> property) {
@@ -423,6 +463,7 @@ public final class FXUtils {
     /**
      * Bind combo box selection with given enum property bidirectionally.
      * You should <b>only and always</b> use {@code bindEnum} as well as {@code unbindEnum} at the same time.
+     *
      * @param comboBox the combo box being bound with {@code property}.
      * @param property the property being bound with {@code combo box}.
      * @see #unbindEnum(JFXComboBox)
@@ -432,6 +473,7 @@ public final class FXUtils {
     @Deprecated
     public static void bindEnum(JFXComboBox<?> comboBox, Property<? extends Enum<?>> property) {
         unbindEnum(comboBox);
+        @SuppressWarnings("rawtypes")
         ChangeListener<Number> listener = (a, b, newValue) ->
                 ((Property) property).setValue(property.getValue().getClass().getEnumConstants()[newValue.intValue()]);
         comboBox.getSelectionModel().select(property.getValue().ordinal());
@@ -442,6 +484,7 @@ public final class FXUtils {
     /**
      * Unbind combo box selection with given enum property bidirectionally.
      * You should <b>only and always</b> use {@code bindEnum} as well as {@code unbindEnum} at the same time.
+     *
      * @param comboBox the combo box being bound with the property which can be inferred by {@code bindEnum}.
      * @see #bindEnum(JFXComboBox, Property)
      * @deprecated Use {@link ExtendedProperties#selectedItemPropertyFor(ComboBox)}
@@ -449,6 +492,7 @@ public final class FXUtils {
     @SuppressWarnings("unchecked")
     @Deprecated
     public static void unbindEnum(JFXComboBox<?> comboBox) {
+        @SuppressWarnings("rawtypes")
         ChangeListener listener = tryCast(comboBox.getProperties().get("FXUtils.bindEnum.listener"), ChangeListener.class).orElse(null);
         if (listener == null) return;
         comboBox.getSelectionModel().selectedIndexProperty().removeListener(listener);
@@ -456,6 +500,7 @@ public final class FXUtils {
 
     /**
      * Suppress IllegalArgumentException since the url is supposed to be correct definitely.
+     *
      * @param url the url of image. The image resource should be a file within the jar.
      * @return the image resource within the jar.
      * @see org.jackhuang.hmcl.util.CrashReporter
@@ -551,5 +596,21 @@ public final class FXUtils {
                 e.consume();
             }
         });
+    }
+
+    // Based on https://stackoverflow.com/a/57552025
+    // Fix #874: Use it instead of SwingFXUtils.toFXImage
+    public static WritableImage toFXImage(BufferedImage image) {
+        WritableImage wr = new WritableImage(image.getWidth(), image.getHeight());
+        PixelWriter pw = wr.getPixelWriter();
+
+        final int iw = image.getWidth();
+        final int ih = image.getHeight();
+        for (int x = 0; x < iw; x++) {
+            for (int y = 0; y < ih; y++) {
+                pw.setArgb(x, y, image.getRGB(x, y));
+            }
+        }
+        return wr;
     }
 }

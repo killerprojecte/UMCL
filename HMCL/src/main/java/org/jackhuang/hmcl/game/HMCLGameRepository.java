@@ -291,12 +291,15 @@ public class HMCLGameRepository extends DefaultGameRepository {
         LaunchOptions.Builder builder = new LaunchOptions.Builder()
                 .setGameDir(gameDir)
                 .setJava(javaVersion)
-                .setVersionName(Metadata.TITLE)
                 .setVersionType(Metadata.TITLE)
                 .setProfileName(Metadata.TITLE)
                 .setGameArguments(StringUtils.tokenize(vs.getMinecraftArgs()))
                 .setJavaArguments(StringUtils.tokenize(vs.getJavaArgs()))
-                .setMaxMemory(vs.getMaxMemory())
+                .setMaxMemory((int)(getAllocatedMemory(
+                        vs.getMaxMemory(),
+                        OperatingSystem.getPhysicalMemoryStatus().orElse(OperatingSystem.PhysicalMemoryStatus.INVALID).getAvailable(),
+                        vs.isAutoMemory()
+                ) / 1024 / 1024))
                 .setMinMemory(vs.getMinMemory())
                 .setMetaspace(Lang.toIntOrNull(vs.getPermSize()))
                 .setWidth(vs.getWidth())
@@ -307,7 +310,10 @@ public class HMCLGameRepository extends DefaultGameRepository {
                 .setPrecalledCommand(vs.getPreLaunchCommand())
                 .setNoGeneratedJVMArgs(vs.isNoJVMArgs())
                 .setNativesDirType(vs.getNativesDirType())
-                .setNativesDir(vs.getNativesDir());
+                .setNativesDir(vs.getNativesDir())
+                .setProcessPriority(vs.getProcessPriority())
+                .setUseNativeGLFW(vs.isUseNativeGLFW())
+                .setUseNativeOpenAL(vs.isUseNativeOpenAL());
         if (config().hasProxy()) {
             builder.setProxy(ProxyManager.getProxy());
             if (config().hasProxyAuth()) {
@@ -398,5 +404,9 @@ public class HMCLGameRepository extends DefaultGameRepository {
         } else {
             return versions.containsKey(id);
         }
+    }
+
+    public static long getAllocatedMemory(long minimum, long available, boolean auto) {
+        return auto ? Math.max(minimum, (long) (available * 0.8)) : minimum;
     }
 }

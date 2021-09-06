@@ -122,8 +122,20 @@ public final class Config implements Cloneable, Observable {
     @SerializedName("localization")
     private ObjectProperty<SupportedLocale> localization = new SimpleObjectProperty<>(Locales.DEFAULT);
 
+    @SerializedName("autoDownloadThreads")
+    private BooleanProperty autoDownloadThreads = new SimpleBooleanProperty(false);
+
+    @SerializedName("downloadThreads")
+    private IntegerProperty downloadThreads = new SimpleIntegerProperty(64);
+
     @SerializedName("downloadType")
-    private StringProperty downloadType = new SimpleStringProperty("bmclapi");
+    private StringProperty downloadType = new SimpleStringProperty("mcbbs");
+
+    @SerializedName("autoChooseDownloadType")
+    private BooleanProperty autoChooseDownloadType = new SimpleBooleanProperty(true);
+
+    @SerializedName("versionListSource")
+    private StringProperty versionListSource = new SimpleStringProperty("balanced");
 
     @SerializedName("configurations")
     private ObservableMap<String, Profile> configurations = FXCollections.observableMap(new TreeMap<>());
@@ -383,6 +395,30 @@ public final class Config implements Cloneable, Observable {
         return localization;
     }
 
+    public boolean getAutoDownloadThreads() {
+        return autoDownloadThreads.get();
+    }
+
+    public BooleanProperty autoDownloadThreadsProperty() {
+        return autoDownloadThreads;
+    }
+
+    public void setAutoDownloadThreads(boolean autoDownloadThreads) {
+        this.autoDownloadThreads.set(autoDownloadThreads);
+    }
+
+    public int getDownloadThreads() {
+        return downloadThreads.get();
+    }
+
+    public IntegerProperty downloadThreadsProperty() {
+        return downloadThreads;
+    }
+
+    public void setDownloadThreads(int downloadThreads) {
+        this.downloadThreads.set(downloadThreads);
+    }
+
     public String getDownloadType() {
         return downloadType.get();
     }
@@ -393,6 +429,30 @@ public final class Config implements Cloneable, Observable {
 
     public StringProperty downloadTypeProperty() {
         return downloadType;
+    }
+
+    public boolean isAutoChooseDownloadType() {
+        return autoChooseDownloadType.get();
+    }
+
+    public BooleanProperty autoChooseDownloadTypeProperty() {
+        return autoChooseDownloadType;
+    }
+
+    public void setAutoChooseDownloadType(boolean autoChooseDownloadType) {
+        this.autoChooseDownloadType.set(autoChooseDownloadType);
+    }
+
+    public String getVersionListSource() {
+        return versionListSource.get();
+    }
+
+    public void setVersionListSource(String versionListSource) {
+        this.versionListSource.set(versionListSource);
+    }
+
+    public StringProperty versionListSourceProperty() {
+        return versionListSource;
     }
 
     public ObservableMap<String, Profile> getConfigurations() {
