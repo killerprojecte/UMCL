@@ -1,5 +1,5 @@
-rootProject.name = 'HMCL3'
-include ':HMCL'
-include ':HMCLCore'
-include ':HMCLTransformerDiscoveryService'
+rootProject.name = 'UMCL3'
+include ':UMCL'
+include ':UMCLCore'
+include ':UMCLTransformerDiscoveryService'
 
