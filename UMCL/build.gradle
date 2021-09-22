@@ -43,7 +43,7 @@ version = versionroot + '.' + buildnumber
 mainClassName = 'org.jackhuang.hmcl.Main'
 
 dependencies {
-    implementation project(":HMCLCore")
+    implementation project(":UMCLCore")
     implementation rootProject.files("lib/JFoenix.jar")
 }
 
@@ -122,7 +122,7 @@ shadowJar {
     classifier = null
 
     manifest {
-        attributes 'Created-By': 'Copyright(c) 2013-2021 huangyuhui.',
+        attributes 'Created-By': 'Copyright(c) 2013-2021 unlimitedmc.',
                 'Main-Class': mainClassName,
                 'Multi-Release': 'true',
                 'Implementation-Version': project.version,
